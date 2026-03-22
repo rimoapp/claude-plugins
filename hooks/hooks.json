@@ -3,7 +3,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|Bash",
+        "matcher": "Write|Edit|Bash|EnterWorktree",
         "hooks": [
           {
             "type": "command",

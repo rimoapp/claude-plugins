@@ -123,6 +123,14 @@ assert_exit_code 0 "$result" "Write to gitignored .claude/ dir should exit 0"
 result="$(run_hook "{\"session_id\":\"${SESSION}-14\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"rm -rf src/\"},\"cwd\":\"${REPO_DIR}\"}")"
 assert_exit_code 2 "$result" "Bash mutating still blocked in main repo"
 
+# --- Test 15: EnterWorktree in worktree → exit 2 (block) ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-15\",\"tool_name\":\"EnterWorktree\",\"tool_input\":{},\"cwd\":\"${WORKTREE_DIR}\"}")"
+assert_exit_code 2 "$result" "EnterWorktree in worktree should exit 2"
+
+# --- Test 16: EnterWorktree in main repo → exit 0 (allow) ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-16\",\"tool_name\":\"EnterWorktree\",\"tool_input\":{},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "EnterWorktree in main repo should exit 0"
+
 # --- Cleanup ---
 git -C "$REPO_DIR" worktree remove "$WORKTREE_DIR" 2>/dev/null || true
 

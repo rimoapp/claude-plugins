@@ -45,12 +45,21 @@ main() {
     exit 0
   fi
 
-  # 2. Already inside a worktree? → allow
+  # 2. Already inside a worktree? → allow (but block EnterWorktree)
   if is_inside_worktree "$cwd"; then
+    if [[ "$tool_name" == "EnterWorktree" ]]; then
+      echo "You are already inside a worktree. Continue working here — just commit your changes." >&2
+      exit 2
+    fi
     exit 0
   fi
 
-  # 3. For Write/Edit, allow if target file is outside the repo or gitignored
+  # 3. EnterWorktree in main repo? → allow (let Claude create the worktree)
+  if [[ "$tool_name" == "EnterWorktree" ]]; then
+    exit 0
+  fi
+
+  # 4. For Write/Edit, allow if target file is outside the repo or gitignored
   if [[ "$tool_name" == "Write" || "$tool_name" == "Edit" ]]; then
     local file_path
     file_path="$(parse_json_field "$input" '.tool_input.file_path')"
@@ -59,7 +68,7 @@ main() {
     fi
   fi
 
-  # 4. For Bash tool, only intercept mutating commands
+  # 5. For Bash tool, only intercept mutating commands
   if [[ "$tool_name" == "Bash" ]]; then
     local bash_command
     bash_command="$(parse_json_field "$input" '.tool_input.command')"
@@ -68,7 +77,7 @@ main() {
     fi
   fi
 
-  # 5. Block and instruct Claude to enter a worktree first
+  # 6. Block and instruct Claude to enter a worktree first
   echo "You are about to modify files in the main repository." >&2
   echo "Please call the EnterWorktree tool first to create an isolated worktree, then retry your action." >&2
   exit 2
