@@ -76,9 +76,9 @@ assert_exit_code 0 "$result" "Write in worktree should exit 0"
 result="$(run_hook "{\"session_id\":\"${SESSION}-5\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"ls -la\"},\"cwd\":\"${REPO_DIR}\"}")"
 assert_exit_code 0 "$result" "Bash read-only (ls) should exit 0"
 
-# --- Test 6: Bash mutating command in main repo → exit 2 ---
+# --- Test 6: Bash non-redirect command in main repo → exit 0 (no longer blocked) ---
 result="$(run_hook "{\"session_id\":\"${SESSION}-6\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"touch newfile.txt\"},\"cwd\":\"${REPO_DIR}\"}")"
-assert_exit_code 2 "$result" "Bash mutating (touch) should exit 2"
+assert_exit_code 0 "$result" "Bash touch (no redirect) should exit 0"
 
 # --- Test 7: Bash mutating in worktree → exit 0 ---
 result="$(run_hook "{\"session_id\":\"${SESSION}-7\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"touch newfile.txt\"},\"cwd\":\"${WORKTREE_DIR}\"}")"
@@ -119,9 +119,29 @@ mkdir -p "${REPO_DIR}/.claude"
 result="$(run_hook "{\"session_id\":\"${SESSION}-13\",\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"${REPO_DIR}/.claude/plan.md\"},\"cwd\":\"${REPO_DIR}\"}")"
 assert_exit_code 0 "$result" "Write to gitignored .claude/ dir should exit 0"
 
-# --- Test 14: Bash mutating command still blocked in main repo ---
+# --- Test 14: Bash non-redirect command no longer blocked ---
 result="$(run_hook "{\"session_id\":\"${SESSION}-14\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"rm -rf src/\"},\"cwd\":\"${REPO_DIR}\"}")"
-assert_exit_code 2 "$result" "Bash mutating still blocked in main repo"
+assert_exit_code 0 "$result" "Bash rm (no redirect) should exit 0"
+
+# --- Test 17: Bash redirect to tracked file in main repo → exit 2 ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-17\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"echo hello > src/main.py\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 2 "$result" "Bash redirect to tracked file should exit 2"
+
+# --- Test 18: Bash redirect to /tmp in main repo → exit 0 ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-18\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"echo hello > /tmp/test.txt\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "Bash redirect to /tmp should exit 0"
+
+# --- Test 19: Bash git checkout in main repo → exit 0 ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-19\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git checkout -b new-branch\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "Bash git checkout should exit 0"
+
+# --- Test 20: Bash npm install in main repo → exit 0 ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-20\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"npm install express\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "Bash npm install should exit 0"
+
+# --- Test 21: Bash redirect to gitignored file → exit 0 ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-21\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"echo data > ignored-file.txt\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "Bash redirect to gitignored file should exit 0"
 
 # --- Test 15: EnterWorktree in worktree → exit 2 (block) ---
 result="$(run_hook "{\"session_id\":\"${SESSION}-15\",\"tool_name\":\"EnterWorktree\",\"tool_input\":{},\"cwd\":\"${WORKTREE_DIR}\"}")"

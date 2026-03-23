@@ -6,9 +6,21 @@ A Claude Code plugin that automatically redirects Claude into a git worktree bef
 
 When multiple Claude Code sessions work on the same repository simultaneously, file modifications can conflict. Non-engineers who aren't familiar with git branching may lose work or encounter confusing merge conflicts.
 
+## Design Policy
+
+**During normal use, code changes happen in worktree branches.** This is a guiding principle, not a hard enforcement on every command.
+
+The plugin is designed to be minimally invasive:
+
+- **`Write`/`Edit` to tracked files** in the main repo are blocked — Claude is redirected to create a worktree first
+- **`Bash` commands** are almost entirely allowed — only output redirects (`>`, `>>`) to tracked repo files are blocked
+- **Git commands** (`checkout`, `reset`, `merge`, `rebase`, `stash`, etc.) are always allowed — the current main branch is not assumed to be correct, and users may need to fix or manage it
+- **Package managers, system commands, file utilities** are all allowed
+- **Writes to `/tmp`, gitignored paths, or files outside the repo** are always allowed (Plan Mode, memory, temp files all work)
+
 ## Solution
 
-This plugin intercepts file-modifying tool calls (`Write`, `Edit`, `Bash`) via a `PreToolUse` hook. The moment Claude tries to modify a file in the main repository, the plugin:
+This plugin intercepts `Write`, `Edit`, and `Bash` tool calls via a `PreToolUse` hook. When Claude tries to write or edit a tracked file in the main repository, the plugin:
 
 1. Blocks the modification (exit code 2)
 2. Instructs Claude to call the built-in `EnterWorktree` tool
@@ -84,10 +96,10 @@ Each worktree gets a branch named `worktree-<session-name>`.
 
 ### Bash Command Filtering
 
-The plugin uses a heuristic to distinguish read-only Bash commands (which are allowed) from file-modifying commands (which trigger worktree redirection):
+The plugin only blocks Bash commands that use output redirects (`>`, `>>`) to write to tracked files inside the repository. Everything else is allowed:
 
-- **Allowed**: `ls`, `cat`, `grep`, `git status`, `git log`, `echo hello`, etc.
-- **Intercepted**: `touch`, `mv`, `cp`, `rm`, `sed -i`, `npm install`, `>`, `>>`, etc.
+- **Allowed**: all commands without redirects (`git checkout`, `npm install`, `rm`, `touch`, `mv`, etc.), redirects to `/tmp`, `/dev/null`, gitignored files, or paths outside the repo
+- **Blocked**: `echo "data" > tracked-file.txt`, `cat input >> src/main.py`, etc. (redirects to tracked repo files)
 
 ## Cleanup
 

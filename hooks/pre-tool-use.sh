@@ -72,7 +72,7 @@ main() {
   if [[ "$tool_name" == "Bash" ]]; then
     local bash_command
     bash_command="$(parse_json_field "$input" '.tool_input.command')"
-    if [[ -n "$bash_command" ]] && ! is_mutating_command "$bash_command"; then
+    if [[ -n "$bash_command" ]] && ! is_mutating_command "$bash_command" "$cwd"; then
       exit 0
     fi
   fi

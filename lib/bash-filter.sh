@@ -1,67 +1,69 @@
 #!/usr/bin/env bash
 # Heuristic to detect whether a Bash command is file-modifying (mutating).
 # Used to decide whether the PreToolUse hook should intercept a Bash tool call.
+#
+# Only output redirects (> and >>) to tracked repo files are considered mutating.
+# All other commands (git, package managers, file utilities, etc.) are allowed,
+# since Write/Edit tools are the primary guard for file modifications.
 
-# Check if a command is likely to modify files.
-# Arguments: $1 = command string
+# Check if a command is likely to modify tracked files via output redirect.
+# Arguments: $1 = command string, $2 = cwd (for repo-relative path checks)
 # Returns: 0 if mutating, 1 if read-only.
 is_mutating_command() {
   local cmd="$1"
+  local cwd="${2:-}"
 
   # Strip leading whitespace
   cmd="$(echo "$cmd" | sed 's/^[[:space:]]*//')"
 
-  # Check for output redirects (but not /dev/null or stderr-only redirects)
   # Remove /dev/null redirects and stderr redirects before checking
   local sanitized
   sanitized="$(echo "$cmd" | sed -E 's/[0-9]*>[[:space:]]*\/dev\/null//g; s/[0-9]*>&[0-9]+//g')"
-  if echo "$sanitized" | perl -ne 'BEGIN{$f=1} $f=0 if /(?<![0-9&])\s*>{1,2}\s/; END{exit $f}'; then
-    return 0
+
+  # Check for output redirects (but not /dev/null or stderr-only redirects)
+  if ! echo "$sanitized" | perl -ne 'BEGIN{$f=1} $f=0 if /(?<![0-9&])\s*>{1,2}\s/; END{exit $f}'; then
+    # No redirect found → read-only
+    return 1
   fi
 
-  # List of commands/patterns that typically modify files or system state
-  local -a mutating_patterns=(
-    '\btee\b'
-    '\bsed\s+-i'
-    '\bperl\s+-i'
-    '\bmv\b'
-    '\bcp\b'
-    '\brm\b'
-    '\bmkdir\b'
-    '\btouch\b'
-    '\bchmod\b'
-    '\bchown\b'
-    '\bln\b'
-    '\binstall\b'
-    '\bpatch\b'
-    '\btruncate\b'
-    '\bgit\s+checkout\b'
-    '\bgit\s+reset\b'
-    '\bgit\s+merge\b'
-    '\bgit\s+rebase\b'
-    '\bgit\s+stash\b'
-    '\bnpm\s+install\b'
-    '\bnpm\s+i\b'
-    '\bnpm\s+ci\b'
-    '\bnpm\s+uninstall\b'
-    '\byarn\s+add\b'
-    '\byarn\s+install\b'
-    '\byarn\s+remove\b'
-    '\bpip\s+install\b'
-    '\bpip3\s+install\b'
-    '\bapt\b'
-    '\bapt-get\b'
-    '\bbrew\b'
-    '\bcargo\s+install\b'
-    '\bgo\s+install\b'
-  )
+  # Redirect found — extract the target path(s)
+  local targets
+  targets="$(echo "$sanitized" | perl -ne '
+    while (/(?<![0-9&])\s*>{1,2}\s*"([^"]+)"/g) { print "$1\n"; }
+    while (/(?<![0-9&])\s*>{1,2}\s*'\''([^'\'']+)'\''/g) { print "$1\n"; }
+    while (/(?<![0-9&])\s*>{1,2}\s*([^\s"'\''|;&]+)/g) { print "$1\n"; }
+  ' | sort -u)"
 
-  for pattern in "${mutating_patterns[@]}"; do
-    if echo "$cmd" | perl -ne 'BEGIN{$f=1} $f=0 if /'"$pattern"'/; END{exit $f}'; then
-      return 0
+  # If we couldn't extract any targets, fail open (allow)
+  if [[ -z "$targets" ]]; then
+    return 1
+  fi
+
+  # Check each redirect target
+  while IFS= read -r target; do
+    [[ -z "$target" ]] && continue
+
+    # Allow redirects to /tmp, /var/tmp, /dev/
+    if [[ "$target" == /tmp/* || "$target" == /var/tmp/* || "$target" == /dev/* ]]; then
+      continue
     fi
-  done
 
-  # Default: treat as read-only
+    # If we have cwd context, check if target is outside repo or gitignored
+    if [[ -n "$cwd" ]] && type -t is_outside_repo_or_ignored &>/dev/null; then
+      local resolved="$target"
+      if [[ "$target" != /* ]]; then
+        resolved="${cwd}/${target}"
+      fi
+
+      if is_outside_repo_or_ignored "$cwd" "$resolved"; then
+        continue
+      fi
+    fi
+
+    # This redirect target is inside the repo and not ignored → mutating
+    return 0
+  done <<< "$targets"
+
+  # All redirect targets are safe
   return 1
 }
