@@ -54,12 +54,17 @@ main() {
     exit 0
   fi
 
-  # 3. EnterWorktree in main repo? → allow (let Claude create the worktree)
+  # 3. Not on the default branch? → allow (user intentionally checked out a branch)
+  if ! is_on_default_branch "$cwd"; then
+    exit 0
+  fi
+
+  # 4. EnterWorktree in main repo on default branch? → allow (let Claude create the worktree)
   if [[ "$tool_name" == "EnterWorktree" ]]; then
     exit 0
   fi
 
-  # 4. For Write/Edit, allow if target file is outside the repo or gitignored
+  # 5. For Write/Edit, allow if target file is outside the repo or gitignored
   if [[ "$tool_name" == "Write" || "$tool_name" == "Edit" ]]; then
     local file_path
     file_path="$(parse_json_field "$input" '.tool_input.file_path')"
@@ -68,7 +73,7 @@ main() {
     fi
   fi
 
-  # 5. For Bash tool, only intercept mutating commands
+  # 6. For Bash tool, only intercept mutating commands
   if [[ "$tool_name" == "Bash" ]]; then
     local bash_command
     bash_command="$(parse_json_field "$input" '.tool_input.command')"
@@ -77,8 +82,8 @@ main() {
     fi
   fi
 
-  # 6. Block and instruct Claude to enter a worktree first
-  echo "You are about to modify files in the main repository." >&2
+  # 7. Block and instruct Claude to enter a worktree first
+  echo "You are about to modify files on the default branch." >&2
   echo "Please call the EnterWorktree tool first to create an isolated worktree, then retry your action." >&2
   exit 2
 }

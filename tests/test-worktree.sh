@@ -78,5 +78,29 @@ assert_true "gitignored file" is_outside_repo_or_ignored "$REPO_DIR" "${REPO_DIR
 # Non-ignored file in same repo → false
 assert_false "non-ignored file in repo" is_outside_repo_or_ignored "$REPO_DIR" "${REPO_DIR}/README.md"
 
+# --- Test is_on_default_branch ---
+
+# On main branch → true
+assert_true "on default branch (main)" is_on_default_branch "$REPO_DIR"
+
+# On a feature branch → false
+git -C "$REPO_DIR" checkout -b feature-branch &>/dev/null
+assert_false "on feature branch" is_on_default_branch "$REPO_DIR"
+
+# Back to main → true
+git -C "$REPO_DIR" checkout main &>/dev/null
+assert_true "back on main" is_on_default_branch "$REPO_DIR"
+
+# With origin/HEAD set → uses that
+REMOTE_REPO="${TEMP_DIR}/remote-repo"
+git init -b develop "$REMOTE_REPO" &>/dev/null
+git -C "$REMOTE_REPO" config commit.gpgsign false
+git -C "$REMOTE_REPO" commit --allow-empty -m "init" &>/dev/null
+CLONE_REPO="${TEMP_DIR}/clone-repo"
+git clone "$REMOTE_REPO" "$CLONE_REPO" &>/dev/null
+assert_true "on default branch (develop via origin/HEAD)" is_on_default_branch "$CLONE_REPO"
+git -C "$CLONE_REPO" checkout -b other-branch &>/dev/null
+assert_false "on non-default branch in clone" is_on_default_branch "$CLONE_REPO"
+
 echo "${PASS} passed, ${FAIL} failed"
 if [[ $FAIL -gt 0 ]]; then exit 1; fi

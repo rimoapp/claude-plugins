@@ -34,6 +34,33 @@ is_git_repo() {
 # Check if a file path is outside the git repo or gitignored.
 # Arguments: $1 = repo directory, $2 = file path
 # Returns: 0 if the file is outside the repo root or gitignored, 1 otherwise.
+# Check if the current branch is the default branch (main/master or configured default).
+# Arguments: $1 = directory path
+# Returns: 0 if on the default branch, 1 otherwise.
+is_on_default_branch() {
+  local dir="$1"
+  local current_branch default_branch
+
+  current_branch="$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null)" || return 1
+
+  # Try to detect the default branch from the remote
+  default_branch="$(git -C "$dir" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')" || true
+
+  # Fallback: check common default branch names
+  if [[ -z "$default_branch" ]]; then
+    if git -C "$dir" show-ref --verify --quiet refs/heads/main 2>/dev/null; then
+      default_branch="main"
+    elif git -C "$dir" show-ref --verify --quiet refs/heads/master 2>/dev/null; then
+      default_branch="master"
+    else
+      # If we can't determine the default branch, assume current is not default
+      return 1
+    fi
+  fi
+
+  [[ "$current_branch" == "$default_branch" ]]
+}
+
 is_outside_repo_or_ignored() {
   local dir="$1"
   local file_path="$2"

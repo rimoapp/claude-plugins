@@ -1,6 +1,6 @@
 {
   "name": "auto-worktree",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Automatically creates git worktrees when Claude modifies files, enabling safe parallel work without git conflicts.",
   "author": {
     "name": "rimoapp"

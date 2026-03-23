@@ -143,6 +143,23 @@ assert_exit_code 0 "$result" "Bash npm install should exit 0"
 result="$(run_hook "{\"session_id\":\"${SESSION}-21\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"echo data > ignored-file.txt\"},\"cwd\":\"${REPO_DIR}\"}")"
 assert_exit_code 0 "$result" "Bash redirect to gitignored file should exit 0"
 
+# --- Test 22: Write on non-default branch → exit 0 (allow) ---
+FEATURE_BRANCH="feature-test-$$"
+git -C "$REPO_DIR" checkout -b "$FEATURE_BRANCH" &>/dev/null
+result="$(run_hook "{\"session_id\":\"${SESSION}-22\",\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"${REPO_DIR}/src/main.py\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "Write on non-default branch should exit 0"
+
+# --- Test 23: Edit on non-default branch → exit 0 (allow) ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-23\",\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"test.txt\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "Edit on non-default branch should exit 0"
+
+# --- Test 24: Bash redirect on non-default branch → exit 0 (allow) ---
+result="$(run_hook "{\"session_id\":\"${SESSION}-24\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"echo hello > src/main.py\"},\"cwd\":\"${REPO_DIR}\"}")"
+assert_exit_code 0 "$result" "Bash redirect on non-default branch should exit 0"
+
+# Switch back to main for remaining tests
+git -C "$REPO_DIR" checkout main &>/dev/null
+
 # --- Test 15: EnterWorktree in worktree → exit 2 (block) ---
 result="$(run_hook "{\"session_id\":\"${SESSION}-15\",\"tool_name\":\"EnterWorktree\",\"tool_input\":{},\"cwd\":\"${WORKTREE_DIR}\"}")"
 assert_exit_code 2 "$result" "EnterWorktree in worktree should exit 2"
