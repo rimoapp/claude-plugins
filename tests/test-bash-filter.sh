@@ -56,6 +56,8 @@ assert_readonly() {
 assert_mutating 'echo "hello" > file.txt' "$REPO_DIR" "redirect to tracked file"
 assert_mutating 'echo "hello" >> file.txt' "$REPO_DIR" "append to tracked file"
 assert_mutating 'echo "data" > src/main.py' "$REPO_DIR" "redirect to tracked src file"
+assert_mutating 'echo hi > "file.txt"' "$REPO_DIR" "redirect to double-quoted tracked file"
+assert_mutating "echo hi > 'file.txt'" "$REPO_DIR" "redirect to single-quoted tracked file"
 
 # === Redirect to safe targets (read-only) ===
 assert_readonly 'echo "test" > /tmp/test.txt' "$REPO_DIR" "redirect to /tmp"
@@ -102,6 +104,13 @@ assert_readonly 'yarn add react' "$REPO_DIR" "yarn add"
 assert_readonly 'brew install jq' "$REPO_DIR" "brew install"
 assert_readonly 'cargo install ripgrep' "$REPO_DIR" "cargo install"
 assert_readonly 'go install golang.org/x/tools/...' "$REPO_DIR" "go install"
+
+# === Here-document commands (read-only — body content should not trigger redirect detection) ===
+assert_readonly "$(printf 'cat > /tmp/test.txt << '\''EOF'\''\n<tag attr="val">content</tag>\nEOF')" "$REPO_DIR" "heredoc to /tmp"
+assert_readonly "$(printf 'cat > ignored.txt << '\''EOF'\''\nsome > content\nEOF')" "$REPO_DIR" "heredoc to gitignored file"
+assert_readonly "$(printf 'cat > /tmp/file.xml << EOF\n<?xml version="1.0"?>\n<root>\n  <item>value</item>\n</root>\nEOF')" "$REPO_DIR" "heredoc with XML to /tmp"
+assert_mutating "$(printf 'cat <<-EOF > /tmp/out\n\tbody\n\tEOF\necho hi > file.txt')" "$REPO_DIR" "<<- heredoc followed by mutating redirect"
+assert_readonly "$(printf 'cat <<-EOF > /tmp/out\n\tbody\n\tEOF\necho done')" "$REPO_DIR" "<<- heredoc with tab-indented delimiter"
 
 # === Standard read-only commands ===
 assert_readonly 'ls -la' "$REPO_DIR" "ls"

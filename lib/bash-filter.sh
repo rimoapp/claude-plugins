@@ -5,6 +5,43 @@
 # Only output redirects (> and >>) to tracked repo files are considered mutating.
 # All other commands (git, package managers, file utilities, etc.) are allowed,
 # since Write/Edit tools are the primary guard for file modifications.
+#
+# Pure bash/sed/grep only — no perl or python dependency.
+
+# Strip here-document bodies from a command string, keeping only the command
+# lines themselves. This prevents content inside heredocs (e.g. XML tags with >)
+# from being misdetected as output redirects.
+_strip_heredoc_bodies() {
+  local input="$1"
+  local delim=""
+  local output=""
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ -n "$delim" ]]; then
+      # Inside heredoc body — skip until closing delimiter.
+      # For <<- heredocs, the delimiter may be preceded by tabs.
+      local stripped="${line%%[^	]*}"  # count leading tabs only
+      stripped="${line#"$stripped"}"     # remove leading tabs
+      if [[ "$stripped" == "$delim" ]]; then
+        delim=""
+      fi
+      continue
+    fi
+
+    # Detect heredoc start: <<'DELIM', <<"DELIM", <<DELIM, <<-DELIM, etc.
+    if [[ "$line" =~ \<\<-?[[:space:]]*\'([^\']+)\' ]]; then
+      delim="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ \<\<-?[[:space:]]*\"([^\"]+)\" ]]; then
+      delim="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ \<\<-?[[:space:]]*\\?([A-Za-z_][A-Za-z0-9_]*) ]]; then
+      delim="${BASH_REMATCH[1]}"
+    fi
+
+    output+="$line"$'\n'
+  done <<< "$input"
+
+  printf '%s' "$output"
+}
 
 # Check if a command is likely to modify tracked files via output redirect.
 # Arguments: $1 = command string, $2 = cwd (for repo-relative path checks)
@@ -14,25 +51,29 @@ is_mutating_command() {
   local cwd="${2:-}"
 
   # Strip leading whitespace
-  cmd="$(echo "$cmd" | sed 's/^[[:space:]]*//')"
+  cmd="${cmd#"${cmd%%[![:space:]]*}"}"
 
   # Remove /dev/null redirects and stderr redirects before checking
   local sanitized
-  sanitized="$(echo "$cmd" | sed -E 's/[0-9]*>[[:space:]]*\/dev\/null//g; s/[0-9]*>&[0-9]+//g')"
+  sanitized="$(printf '%s' "$cmd" | sed -E 's/[0-9]*>[[:space:]]*\/dev\/null//g; s/[0-9]*>&[0-9]+//g')"
 
-  # Check for output redirects (but not /dev/null or stderr-only redirects)
-  if ! echo "$sanitized" | perl -ne 'BEGIN{$f=1} $f=0 if /(?<![0-9&])\s*>{1,2}\s/; END{exit $f}'; then
+  # Remove here-document bodies so their contents don't trigger false positives
+  sanitized="$(_strip_heredoc_bodies "$sanitized")"
+
+  # Check for output redirects (> or >>, not preceded by digit, &, or >)
+  if ! printf '%s\n' "$sanitized" | grep -qE '(^|[^0-9&>])[[:space:]]*>{1,2}[[:space:]]'; then
     # No redirect found → read-only
     return 1
   fi
 
-  # Redirect found — extract the target path(s)
+  # Extract redirect target paths using sed (no perl).
+  # Handles bare paths, double-quoted paths, and single-quoted paths.
   local targets
-  targets="$(echo "$sanitized" | perl -ne '
-    while (/(?<![0-9&])\s*>{1,2}\s*"([^"]+)"/g) { print "$1\n"; }
-    while (/(?<![0-9&])\s*>{1,2}\s*'\''([^'\'']+)'\''/g) { print "$1\n"; }
-    while (/(?<![0-9&])\s*>{1,2}\s*([^\s"'\''|;&]+)/g) { print "$1\n"; }
-  ' | sort -u)"
+  targets="$(printf '%s\n' "$sanitized" | sed -nE \
+    -e "s/.*[^0-9&>][[:space:]]*>{1,2}[[:space:]]*\"([^\"]+)\".*/\1/p" \
+    -e "s/.*[^0-9&>][[:space:]]*>{1,2}[[:space:]]*'([^']+)'.*/\1/p" \
+    -e "s/.*[^0-9&>][[:space:]]*>{1,2}[[:space:]]*([^[:space:]\"'|;&]+).*/\1/p" \
+    | sort -u)"
 
   # If we couldn't extract any targets, fail open (allow)
   if [[ -z "$targets" ]]; then
