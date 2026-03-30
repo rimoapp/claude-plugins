@@ -1,9 +1,19 @@
 {
   "name": "auto-worktree",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Automatically creates git worktrees when Claude modifies files, enabling safe parallel work without git conflicts.",
   "author": {
     "name": "rimoapp"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "userConfig": {
+    "skip_directories": {
+      "description": "Comma-separated list of absolute directory paths where auto-worktree should not activate (e.g. /path/to/notes,/path/to/scratch)",
+      "sensitive": false
+    },
+    "fetch_default_branch": {
+      "description": "Fetch the latest default branch from origin on session start (true/false, default: true)",
+      "sensitive": false
+    }
+  }
 }

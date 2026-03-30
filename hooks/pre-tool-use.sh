@@ -11,6 +11,7 @@ PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 
 source "${PLUGIN_ROOT}/lib/worktree.sh"
 source "${PLUGIN_ROOT}/lib/bash-filter.sh"
+source "${PLUGIN_ROOT}/lib/config.sh"
 
 # --- JSON Parsing ---
 parse_json_field() {
@@ -42,6 +43,11 @@ main() {
 
   # 1. Not a git repo? → no-op
   if ! is_git_repo "$cwd"; then
+    exit 0
+  fi
+
+  # 1.5. Skipped directory? → no-op
+  if is_skipped_directory "$cwd"; then
     exit 0
   fi
 
