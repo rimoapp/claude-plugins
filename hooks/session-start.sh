@@ -55,10 +55,10 @@ main() {
     exit 0
   fi
 
-  # Fetch the latest default branch from origin if enabled (5s timeout)
+  # Pull the latest default branch from origin if enabled (8s timeout)
   if is_fetch_enabled; then
-    if ! timeout 5 git -C "$cwd" fetch origin --quiet 2>/dev/null; then
-      echo "[auto-worktree] Warning: failed to fetch from origin (offline or timeout). Continuing with local state." >&2
+    if ! timeout 8 git -C "$cwd" pull --ff-only --quiet 2>/dev/null; then
+      echo "[auto-worktree] Warning: failed to pull from origin (offline, timeout, or diverged). Continuing with local state." >&2
     fi
   fi
 

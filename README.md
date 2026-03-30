@@ -137,7 +137,7 @@ Repositories whose root path matches an entry here will be completely ignored by
 
 ### fetch_default_branch
 
-When enabled (the default), the plugin runs `git fetch origin` at session start (with a 5-second timeout) to ensure the default branch is up to date before creating a worktree. If the fetch fails (e.g. offline, timeout, auth required), the plugin continues with the local state and prints a warning. Set to `false` to skip this entirely.
+When enabled (the default), the plugin runs `git pull --ff-only` at session start (with an 8-second timeout) to ensure the local default branch is up to date before creating a worktree. If the pull fails (e.g. offline, timeout, diverged history), the plugin continues with the local state and prints a warning. Set to `false` to skip this entirely.
 
 ## Cleanup
 
