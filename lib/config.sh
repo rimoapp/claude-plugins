@@ -27,6 +27,13 @@ is_skipped_directory() {
     skip_dir="$(echo "$skip_dir" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
     [[ -z "$skip_dir" ]] && continue
 
+    # Expand ~ to $HOME
+    if [[ "$skip_dir" == "~/"* ]]; then
+      skip_dir="${HOME}${skip_dir#"~"}"
+    elif [[ "$skip_dir" == "~" ]]; then
+      skip_dir="$HOME"
+    fi
+
     # Resolve the skip dir too
     local resolved_skip="$skip_dir"
     if command -v realpath &>/dev/null; then

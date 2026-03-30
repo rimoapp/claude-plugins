@@ -81,6 +81,17 @@ rmdir "$NON_GIT_DIR"
 export CLAUDE_PLUGIN_OPTION_SKIP_DIRECTORIES=","
 assert_false "Empty entries should not match" is_skipped_directory "$REPO_A"
 
+# Test 9: Tilde (~/) expansion
+# Create a repo inside $HOME for this test
+TILDE_REPO="${HOME}/.auto-worktree-test-$$"
+mkdir -p "$TILDE_REPO"
+git -C "$TILDE_REPO" init -b main &>/dev/null
+git -C "$TILDE_REPO" config commit.gpgsign false
+git -C "$TILDE_REPO" commit --allow-empty -m "init" &>/dev/null
+export CLAUDE_PLUGIN_OPTION_SKIP_DIRECTORIES="~/.auto-worktree-test-$$"
+assert_true "Tilde path should expand and match" is_skipped_directory "$TILDE_REPO"
+rm -rf "$TILDE_REPO"
+
 # --- is_pull_enabled tests ---
 
 # Test 9: Default (unset) → enabled
