@@ -68,6 +68,7 @@ main() {
 [auto-worktree] You are currently on the default branch in the main repository.
 IMPORTANT: Before modifying any files, you MUST call the EnterWorktree tool first to create an isolated worktree.
 Do NOT attempt to Write, Edit, or run mutating Bash commands before entering a worktree.
+TIP: Skills and files created after EnterWorktree are immediately testable in the worktree — no merge required.
 MSG
 
   exit 0
