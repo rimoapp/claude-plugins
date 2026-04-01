@@ -14,6 +14,10 @@
     "pull_default_branch": {
       "description": "Pull the latest default branch from origin on session start. Uses fast-forward only, so local changes are never overwritten. If the pull fails (offline, timeout, or diverged history), the plugin silently continues with the local state. (true/false, default: true)",
       "sensitive": false
+    },
+    "sync_gitignored_writes": {
+      "description": "Automatically copy gitignored files written in a worktree back to the main repository. Covers Write/Edit tool calls and Bash output redirects to gitignored paths. (true/false, default: true)",
+      "sensitive": false
     }
   }
 }

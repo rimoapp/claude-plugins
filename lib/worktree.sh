@@ -102,3 +102,61 @@ is_outside_repo_or_ignored() {
 
   return 1
 }
+
+# Get the main (non-worktree) repository root from inside a worktree.
+# Arguments: $1 = directory path (inside a worktree or main repo)
+# Outputs: the main repo's working tree root path.
+get_main_repo_root() {
+  local dir="$1"
+  local git_dir
+  git_dir="$(git -C "$dir" rev-parse --git-dir 2>/dev/null)" || return 1
+
+  if [[ "$git_dir" == *"/worktrees/"* ]]; then
+    # Linked worktree: git_dir is like /path/to/main/.git/worktrees/<name>
+    local main_git_dir="${git_dir%/worktrees/*}"
+    git --git-dir="$main_git_dir" rev-parse --show-toplevel 2>/dev/null
+  else
+    git -C "$dir" rev-parse --show-toplevel 2>/dev/null
+  fi
+}
+
+# Check if a file path is inside the repo AND gitignored.
+# Unlike is_outside_repo_or_ignored(), this returns true ONLY for gitignored
+# files that are inside the repository (not for files outside the repo).
+# Arguments: $1 = repo directory, $2 = file path
+# Returns: 0 if the file is inside the repo and gitignored, 1 otherwise.
+is_gitignored_in_repo() {
+  local dir="$1"
+  local file_path="$2"
+
+  local repo_root
+  repo_root="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)" || return 1
+
+  # Resolve to absolute path
+  if [[ "$file_path" != /* ]]; then
+    file_path="${dir}/${file_path}"
+  fi
+
+  # Resolve symlinks for consistent comparison (macOS: /var → /private/var)
+  if command -v realpath &>/dev/null; then
+    repo_root="$(realpath "$repo_root")"
+    local resolve_path="$file_path"
+    local suffix=""
+    while [[ ! -e "$resolve_path" ]] && [[ "$resolve_path" != "/" ]]; do
+      suffix="/$(basename "$resolve_path")${suffix}"
+      resolve_path="$(dirname "$resolve_path")"
+    done
+    if [[ -e "$resolve_path" ]]; then
+      file_path="$(realpath "$resolve_path")${suffix}"
+    fi
+  fi
+
+  # Must be inside repo
+  case "$file_path" in
+    "${repo_root}/"*) ;;
+    *) return 1 ;;
+  esac
+
+  # Must be gitignored
+  git -C "$repo_root" check-ignore -q "$file_path" 2>/dev/null
+}

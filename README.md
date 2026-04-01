@@ -115,6 +115,7 @@ The plugin supports user-configurable options via Claude Code's `userConfig` mec
 |--------|-------------|---------|
 | `skip_directories` | Comma-separated list of git repository root paths where auto-worktree should not activate | (empty) |
 | `pull_default_branch` | Pull the latest default branch from origin on session start. Uses fast-forward only — local changes are never overwritten. Silently continues on failure. | `true` |
+| `sync_gitignored_writes` | Automatically copy gitignored files written in a worktree back to the main repository. Covers Write/Edit tool calls and Bash output redirects. | `true` |
 
 ### Example settings.json
 
@@ -124,7 +125,8 @@ The plugin supports user-configurable options via Claude Code's `userConfig` mec
     "auto-worktree@rimoapp-plugins": {
       "options": {
         "skip_directories": "/Users/me/notes,/Users/me/scratch",
-        "pull_default_branch": "false"
+        "pull_default_branch": "false",
+        "sync_gitignored_writes": "true"
       }
     }
   }
@@ -138,6 +140,21 @@ Repositories whose root path matches an entry here will be completely ignored by
 ### pull_default_branch
 
 When enabled (the default), the plugin runs `git pull --ff-only` at session start (with an 8-second timeout) to ensure the local default branch is up to date before creating a worktree. If the pull fails (e.g. offline, timeout, diverged history), the plugin continues with the local state and prints a warning. Set to `false` to skip this entirely.
+
+### sync_gitignored_writes
+
+When enabled (the default), files written to gitignored paths inside a worktree are automatically copied back to the main repository. This ensures that build artifacts in directories like `dist/` or `build/` are not lost when the worktree is removed.
+
+**What is synced:**
+- Files written via Write/Edit tools to gitignored paths inside the repo
+- Bash output redirects (`>`, `>>`) to gitignored paths inside the repo
+
+**What is NOT synced:**
+- Files created indirectly by commands (e.g. `npm install` creating `node_modules/`)
+- Files outside the repository (e.g. `/tmp/...`)
+- Files on tracked (non-gitignored) paths
+
+Set to `false` to disable this behavior entirely.
 
 ## Cleanup
 
@@ -162,8 +179,10 @@ claude-plugin-auto-worktree/
 │   ├── hooks.json           # Hook definitions
 │   ├── session-start.sh     # Proactive instruction at session start
 │   ├── pre-tool-use.sh      # Safety net: block and redirect to EnterWorktree
+│   ├── post-tool-use.sh     # Sync gitignored writes to main repo
 │   └── stop.sh              # Session end summary
 ├── lib/
+│   ├── json.sh              # Shared JSON parsing helpers
 │   ├── worktree.sh          # Git worktree detection helpers
 │   ├── bash-filter.sh       # Mutation detection heuristic
 │   └── config.sh            # User configuration helpers
@@ -172,6 +191,8 @@ claude-plugin-auto-worktree/
 │   ├── test-bash-filter.sh  # Mutation detection tests
 │   ├── test-config.sh       # Configuration unit tests
 │   ├── test-config-integration.sh # Configuration integration tests
+│   ├── test-json.sh         # JSON parsing tests
+│   ├── test-post-tool-use.sh # PostToolUse integration tests
 │   ├── test-worktree.sh     # Worktree detection tests
 │   ├── test-pre-tool-use.sh # PreToolUse integration tests
 │   ├── test-session-start.sh # SessionStart hook tests
@@ -191,7 +212,6 @@ bash tests/run-tests.sh
 - `git` 2.5+ (worktree support)
 - `jq` (preferred) or `python3` (fallback) for JSON parsing
 - `bash` 4+
-- `perl` (for regex matching in bash-filter)
 
 ## License
 

@@ -43,12 +43,12 @@ _strip_heredoc_bodies() {
   printf '%s' "$output"
 }
 
-# Check if a command is likely to modify tracked files via output redirect.
-# Arguments: $1 = command string, $2 = cwd (for repo-relative path checks)
-# Returns: 0 if mutating, 1 if read-only.
-is_mutating_command() {
+# Sanitize a command string for redirect analysis.
+# Strips /dev/null redirects, stderr redirects, and heredoc bodies.
+# Arguments: $1 = command string
+# Outputs: sanitized command string.
+_sanitize_command() {
   local cmd="$1"
-  local cwd="${2:-}"
 
   # Strip leading whitespace
   cmd="${cmd#"${cmd%%[![:space:]]*}"}"
@@ -60,22 +60,47 @@ is_mutating_command() {
   # Remove here-document bodies so their contents don't trigger false positives
   sanitized="$(_strip_heredoc_bodies "$sanitized")"
 
+  printf '%s' "$sanitized"
+}
+
+# Extract redirect target paths from a sanitized command string.
+# Outputs newline-separated list of unique target paths (may be relative).
+# Arguments: $1 = sanitized command string
+_extract_redirect_targets() {
+  local sanitized="$1"
+
   # Check for output redirects (> or >>, not preceded by digit, &, or >)
   if ! printf '%s\n' "$sanitized" | grep -qE '(^|[^0-9&>])[[:space:]]*>{1,2}[[:space:]]'; then
-    # No redirect found → read-only
-    return 1
+    return
   fi
 
-  # Extract redirect target paths using sed (no perl).
+  # Extract redirect target paths.
+  # Uses grep -oE to find ALL redirect expressions (not just the last per line),
+  # then sed to extract the target path from each match.
   # Handles bare paths, double-quoted paths, and single-quoted paths.
-  local targets
-  targets="$(printf '%s\n' "$sanitized" | sed -nE \
-    -e "s/.*[^0-9&>][[:space:]]*>{1,2}[[:space:]]*\"([^\"]+)\".*/\1/p" \
-    -e "s/.*[^0-9&>][[:space:]]*>{1,2}[[:space:]]*'([^']+)'.*/\1/p" \
-    -e "s/.*[^0-9&>][[:space:]]*>{1,2}[[:space:]]*([^[:space:]\"'|;&]+).*/\1/p" \
-    | sort -u)"
+  printf '%s\n' "$sanitized" \
+    | grep -oE '[^0-9&>[:space:]]?[[:space:]]*>{1,2}[[:space:]]*(\"[^\"]+\"|'\''[^'\'']+'\''|[^[:space:]"'\''|;&]+)' \
+    | sed -E \
+      -e 's/.*>[[:space:]]*//' \
+      -e 's/^"(.*)"$/\1/' \
+      -e "s/^'(.*)'$/\1/" \
+    | sort -u
+}
 
-  # If we couldn't extract any targets, fail open (allow)
+# Check if a command is likely to modify tracked files via output redirect.
+# Arguments: $1 = command string, $2 = cwd (for repo-relative path checks)
+# Returns: 0 if mutating, 1 if read-only.
+is_mutating_command() {
+  local cmd="$1"
+  local cwd="${2:-}"
+
+  local sanitized
+  sanitized="$(_sanitize_command "$cmd")"
+
+  local targets
+  targets="$(_extract_redirect_targets "$sanitized")"
+
+  # If no targets found, fail open (allow)
   if [[ -z "$targets" ]]; then
     return 1
   fi
@@ -107,4 +132,42 @@ is_mutating_command() {
 
   # All redirect targets are safe
   return 1
+}
+
+# Get redirect targets from a command that point to gitignored files inside the repo.
+# Arguments: $1 = command string, $2 = cwd
+# Outputs: newline-separated list of absolute paths that are gitignored in the repo.
+get_ignored_redirect_targets() {
+  local cmd="$1"
+  local cwd="${2:-}"
+
+  [[ -z "$cwd" ]] && return
+
+  local sanitized
+  sanitized="$(_sanitize_command "$cmd")"
+
+  local targets
+  targets="$(_extract_redirect_targets "$sanitized")"
+
+  [[ -z "$targets" ]] && return
+
+  while IFS= read -r target; do
+    [[ -z "$target" ]] && continue
+
+    # Skip /tmp, /var/tmp, /dev/
+    if [[ "$target" == /tmp/* || "$target" == /var/tmp/* || "$target" == /dev/* ]]; then
+      continue
+    fi
+
+    # Resolve to absolute path
+    local resolved="$target"
+    if [[ "$target" != /* ]]; then
+      resolved="${cwd}/${target}"
+    fi
+
+    # Output only if inside repo and gitignored
+    if type -t is_gitignored_in_repo &>/dev/null && is_gitignored_in_repo "$cwd" "$resolved"; then
+      echo "$resolved"
+    fi
+  done <<< "$targets"
 }

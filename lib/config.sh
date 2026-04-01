@@ -60,3 +60,14 @@ is_pull_enabled() {
     *) return 0 ;;
   esac
 }
+
+# Check if sync_gitignored_writes is enabled.
+# Reads CLAUDE_PLUGIN_OPTION_SYNC_GITIGNORED_WRITES.
+# Returns: 0 if enabled (default), 1 if explicitly disabled.
+is_sync_gitignored_enabled() {
+  local val="${CLAUDE_PLUGIN_OPTION_SYNC_GITIGNORED_WRITES:-true}"
+  case "${val,,}" in
+    false|0|no|off) return 1 ;;
+    *) return 0 ;;
+  esac
+}

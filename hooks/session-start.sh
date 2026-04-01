@@ -9,20 +9,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 
+source "${PLUGIN_ROOT}/lib/json.sh"
 source "${PLUGIN_ROOT}/lib/worktree.sh"
 source "${PLUGIN_ROOT}/lib/config.sh"
-
-parse_json_field() {
-  local json="$1"
-  local field="$2"
-  if command -v jq &>/dev/null; then
-    echo "$json" | jq -r "$field"
-  elif command -v python3 &>/dev/null; then
-    echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(eval('d' + ''.join('[\"' + k + '\"]' for k in '$field'.strip('.').split('.'))))" 2>/dev/null || echo ""
-  else
-    echo ""
-  fi
-}
 
 main() {
   local input
