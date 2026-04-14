@@ -15,24 +15,5 @@ jobs:
         run: |
           git config --global user.name "CI"
           git config --global user.email "ci@test"
-      - name: Debug redirect regex
-        run: |
-          source lib/bash-filter.sh
-          source lib/worktree.sh
-          echo "=== grep version ==="
-          grep --version | head -1
-          echo "=== Test single redirect ==="
-          cmd="echo hello > /tmp/test/dist/output.txt"
-          sanitized="$(_sanitize_command "$cmd")"
-          echo "sanitized: $sanitized"
-          echo "grep check:"
-          printf '%s\n' "$sanitized" | grep -oE '[^0-9&>[:space:]]?[[:space:]]*>{1,2}[[:space:]]*(\"[^\"]+\"|'\''[^'\'']+'\''|[^[:space:]"'\''|;&]+)' || echo "(no match)"
-          echo "=== Test extract_redirect_targets ==="
-          _extract_redirect_targets "$sanitized" || echo "(empty)"
-          echo "=== Test multiple redirects ==="
-          cmd2="echo a > /tmp/test/dist/first.txt && echo b > /tmp/test/dist/second.txt"
-          sanitized2="$(_sanitize_command "$cmd2")"
-          echo "sanitized: $sanitized2"
-          _extract_redirect_targets "$sanitized2" || echo "(empty)"
-      - name: Run tests
+- name: Run tests
         run: bash tests/run-tests.sh

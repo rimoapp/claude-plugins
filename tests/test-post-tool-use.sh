@@ -8,7 +8,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Create a temporary git repo with a worktree for testing
-TEMP_DIR="$(mktemp -d)"
+# Use $HOME instead of /tmp for temp directory because the sync logic
+# skips /tmp/* paths — on Linux mktemp -d returns /tmp/... which would
+# cause Bash redirect sync tests to be silently skipped.
+TEMP_DIR="${HOME}/.auto-worktree-test-$$"
+mkdir -p "$TEMP_DIR"
 trap 'cd /; rm -rf "$TEMP_DIR"' EXIT
 
 MAIN_REPO="${TEMP_DIR}/main-repo"
