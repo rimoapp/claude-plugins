@@ -1,5 +1,7 @@
 # claude-plugin-auto-worktree
 
+[English](README.md) | [日本語](docs/i18n/README.ja.md) | [Español](docs/i18n/README.es.md) | [Deutsch](docs/i18n/README.de.md) | [中文](docs/i18n/README.zh-cn.md) | [Русский](docs/i18n/README.ru.md) | [Português](docs/i18n/README.pt.md) | [한국어](docs/i18n/README.ko.md)
+
 A Claude Code plugin that automatically redirects Claude into a git worktree before modifying files, enabling safe parallel work without git conflicts.
 
 ## Problem
@@ -209,6 +211,8 @@ claude-plugin-auto-worktree/
 │   ├── test-pre-tool-use.sh # PreToolUse integration tests
 │   ├── test-session-start.sh # SessionStart hook tests
 │   └── test-stop.sh         # Stop hook tests
+├── docs/
+│   └── i18n/                # Translated READMEs
 ├── LICENSE
 └── README.md
 ```
