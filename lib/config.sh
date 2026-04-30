@@ -71,3 +71,14 @@ is_sync_gitignored_enabled() {
     *) return 0 ;;
   esac
 }
+
+# Check if auto_return_to_default is enabled.
+# Reads CLAUDE_PLUGIN_OPTION_AUTO_RETURN_TO_DEFAULT.
+# Returns: 0 if enabled (default), 1 if explicitly disabled.
+is_auto_return_enabled() {
+  local val="${CLAUDE_PLUGIN_OPTION_AUTO_RETURN_TO_DEFAULT:-true}"
+  case "${val,,}" in
+    false|0|no|off) return 1 ;;
+    *) return 0 ;;
+  esac
+}

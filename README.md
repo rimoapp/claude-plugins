@@ -118,6 +118,7 @@ The plugin supports user-configurable options via Claude Code's `userConfig` mec
 | `skip_directories` | Comma-separated list of git repository root paths where auto-worktree should not activate | (empty) |
 | `pull_default_branch` | Pull the latest default branch from origin on session start. Uses fast-forward only — local changes are never overwritten. Silently continues on failure. | `true` |
 | `sync_gitignored_writes` | Automatically copy gitignored files written in a worktree back to the main repository. Covers Write/Edit tool calls and Bash output redirects. | `true` |
+| `auto_return_to_default` | Automatically switch back to the default branch at session start if on a non-default branch with no uncommitted changes. | `true` |
 
 ### Example settings.json
 
@@ -142,6 +143,21 @@ Repositories whose root path matches an entry here will be completely ignored by
 ### pull_default_branch
 
 When enabled (the default), the plugin runs `git pull --ff-only` at session start (with an 8-second timeout) to ensure the local default branch is up to date before creating a worktree. If the pull fails (e.g. offline, timeout, diverged history), the plugin continues with the local state and prints a warning. Set to `false` to skip this entirely.
+
+### auto_return_to_default
+
+This option only governs **whether the working branch is automatically switched back to the default branch**. Keeping the local default branch ref fresh is handled separately by `pull_default_branch` and runs even when this option is disabled.
+
+When enabled (the default), the plugin checks at session start whether Claude is on a non-default branch in the main repository. If so:
+
+- **No uncommitted changes** — the plugin automatically runs `git checkout <default-branch>` and continues with the normal pull + EnterWorktree flow. A brief notice is printed so Claude can inform the user.
+- **Uncommitted changes exist** — the plugin prints a warning asking the user to commit and push before switching, then exits without modifying the working branch.
+
+Set to `false` to disable the auto-switch entirely. Non-default branches are not switched, and no warning is printed.
+
+Independently of this option, when `pull_default_branch=true` and Claude is on a non-default branch, the plugin runs `git fetch origin <default-branch>:<default-branch>` in the background to fast-forward the local default ref without disturbing the user's working tree (non-fast-forward updates are rejected, and the default branch is not checked out in this path). A short notice is printed only when the local default ref actually moved.
+
+Untracked files are not considered "changes" for the dirty-state check; they carry over safely across branch switches.
 
 ### sync_gitignored_writes
 
