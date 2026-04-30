@@ -118,6 +118,7 @@ my-project/
 | `skip_directories` | auto-worktree を無効にする git リポジトリルートパスのカンマ区切りリスト | （空） |
 | `pull_default_branch` | セッション開始時に origin からデフォルトブランチの最新を pull します。fast-forward のみ使用 — ローカルの変更は上書きされません。失敗時はサイレントに続行します。 | `true` |
 | `sync_gitignored_writes` | worktree 内で書き込まれた gitignore 対象ファイルをメインリポジトリに自動的にコピーします。Write/Edit ツールの呼び出しと Bash の出力リダイレクトに対応します。 | `true` |
+| `auto_return_to_default` | セッション開始時に非デフォルトブランチにいて、未コミットの変更がない場合、自動的にデフォルトブランチに切り替えます。 | `true` |
 
 ### settings.json の例
 
@@ -142,6 +143,21 @@ my-project/
 ### pull_default_branch
 
 有効な場合（デフォルト）、プラグインはセッション開始時に `git pull --ff-only`（8秒のタイムアウト付き）を実行し、worktree 作成前にローカルのデフォルトブランチを最新の状態にします。pull が失敗した場合（オフライン、タイムアウト、履歴の分岐など）、プラグインはローカルの状態で続行し、警告を表示します。これを完全にスキップするには `false` に設定してください。
+
+### auto_return_to_default
+
+このオプションが制御するのは **作業ブランチを自動でデフォルトブランチに戻すかどうか** だけです。ローカルのデフォルトブランチ ref を最新に保つ動作は `pull_default_branch` 側の責務で、このオプションを無効にしても動きます。
+
+有効な場合（デフォルト）、プラグインはセッション開始時にメインリポジトリで Claude が非デフォルトブランチにいるかを確認します。該当する場合：
+
+- **未コミットの変更がない** — プラグインは自動的に `git checkout <default-branch>` を実行し、通常の pull + EnterWorktree フローを続行します。Claude がユーザーに通知できるよう、簡単なメッセージを表示します。
+- **未コミットの変更がある** — プラグインは現在のブランチで commit と push を済ませてから切り替えるよう警告し、作業中のブランチを変更せずに終了します。
+
+`false` に設定すると自動切り替えを完全に無効化します。非デフォルトブランチでもブランチを切り替えず、警告も出しません。
+
+このオプションとは独立に、`pull_default_branch=true` のときは Claude が非デフォルトブランチにいてもバックグラウンドで `git fetch origin <default-branch>:<default-branch>` を実行し、作業ツリーを乱さずにローカルのデフォルト ref を fast-forward で進めます（non-fast-forward は拒否され、デフォルトブランチは checkout されていないので安全）。短い通知が出るのは実際にローカル ref が進んだ場合のみです。
+
+untracked ファイルは dirty 判定では「変更」とみなされません — ブランチ切り替え時にも安全に持ち越されます。
 
 ### sync_gitignored_writes
 

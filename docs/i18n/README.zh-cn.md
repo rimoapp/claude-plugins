@@ -118,6 +118,7 @@ my-project/
 | `skip_directories` | 以逗号分隔的 git 仓库根路径列表，auto-worktree 不会在这些目录中激活 | （空） |
 | `pull_default_branch` | 在会话启动时从 origin 拉取最新的默认分支。仅使用快进合并 — 本地变更不会被覆盖。失败时静默继续。 | `true` |
 | `sync_gitignored_writes` | 自动将 worktree 中写入的被 gitignore 文件复制回主仓库。涵盖 Write/Edit 工具调用和 Bash 输出重定向。 | `true` |
+| `auto_return_to_default` | 在会话启动时，如果当前位于非默认分支且没有未提交变更，自动切换回默认分支。 | `true` |
 
 ### 配置示例 settings.json
 
@@ -142,6 +143,21 @@ my-project/
 ### pull_default_branch
 
 启用时（默认启用），插件会在会话启动时运行 `git pull --ff-only`（超时时间为 8 秒），以确保本地默认分支在创建 worktree 前是最新的。如果拉取失败（例如离线、超时、历史分歧），插件会继续使用本地状态并输出警告。设为 `false` 可完全跳过此步骤。
+
+### auto_return_to_default
+
+此选项仅控制 **是否自动将工作分支切换回默认分支**。保持本地默认分支 ref 最新由 `pull_default_branch` 负责，即便此选项被禁用，也会执行。
+
+启用时（默认启用），插件会在会话启动时检查 Claude 是否位于主仓库的非默认分支。如果是：
+
+- **没有未提交变更** — 插件会自动运行 `git checkout <default-branch>` 并继续正常的 pull + EnterWorktree 流程。会输出简短提示，以便 Claude 通知用户。
+- **存在未提交变更** — 插件会输出警告，要求用户先 commit 并 push 再切换，并在不修改当前分支的情况下退出。
+
+设为 `false` 可完全禁用自动切换。非默认分支不会被切换，也不会输出警告。
+
+与此选项无关，当 `pull_default_branch=true` 且 Claude 位于非默认分支时，插件会在后台运行 `git fetch origin <default-branch>:<default-branch>`，以快进方式推进本地默认 ref，而不会干扰用户的工作树（非快进更新会被拒绝，并且此路径中默认分支并未被 checkout，因此是安全的）。仅当本地默认 ref 实际向前移动时才会输出简短通知。
+
+未跟踪（untracked）文件在 dirty 检查中不被视为"变更"——它们在分支切换时会安全保留。
 
 ### sync_gitignored_writes
 

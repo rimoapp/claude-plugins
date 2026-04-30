@@ -118,6 +118,7 @@ El plugin admite opciones configurables por el usuario mediante el mecanismo `us
 | `skip_directories` | Lista separada por comas de rutas raíz de repositorios git donde auto-worktree no debe activarse | (vacío) |
 | `pull_default_branch` | Descarga la última versión de la rama por defecto desde origin al iniciar la sesión. Usa solo fast-forward — los cambios locales nunca se sobrescriben. Continúa silenciosamente en caso de fallo. | `true` |
 | `sync_gitignored_writes` | Copia automáticamente los archivos ignorados por git escritos en un worktree de vuelta al repositorio principal. Cubre las llamadas a las herramientas Write/Edit y las redirecciones de salida de Bash. | `true` |
+| `auto_return_to_default` | Cambia automáticamente a la rama por defecto al iniciar la sesión si estás en una rama no por defecto sin cambios sin confirmar. | `true` |
 
 ### Ejemplo de settings.json
 
@@ -142,6 +143,21 @@ Los repositorios cuya ruta raíz coincida con una entrada aquí serán completam
 ### pull_default_branch
 
 Cuando está habilitado (valor por defecto), el plugin ejecuta `git pull --ff-only` al inicio de la sesión (con un tiempo límite de 8 segundos) para asegurar que la rama local por defecto esté actualizada antes de crear un worktree. Si el pull falla (p. ej., sin conexión, tiempo agotado, historial divergente), el plugin continúa con el estado local e imprime una advertencia. Establece en `false` para omitir esto por completo.
+
+### auto_return_to_default
+
+Esta opción controla únicamente **si la rama de trabajo se cambia automáticamente de vuelta a la rama por defecto**. Mantener actualizada la ref local de la rama por defecto es responsabilidad de `pull_default_branch` y se ejecuta incluso cuando esta opción está deshabilitada.
+
+Cuando está habilitado (valor por defecto), el plugin verifica al iniciar la sesión si Claude está en una rama no por defecto en el repositorio principal. Si es así:
+
+- **Sin cambios sin confirmar** — el plugin ejecuta automáticamente `git checkout <default-branch>` y continúa con el flujo normal de pull + EnterWorktree. Se imprime un breve aviso para que Claude pueda informar al usuario.
+- **Hay cambios sin confirmar** — el plugin imprime una advertencia pidiendo al usuario que haga commit y push antes de cambiar, y luego sale sin modificar la rama de trabajo.
+
+Establece en `false` para deshabilitar por completo el cambio automático. Las ramas no por defecto no se cambian ni se imprime ninguna advertencia.
+
+Independientemente de esta opción, cuando `pull_default_branch=true` y Claude está en una rama no por defecto, el plugin ejecuta `git fetch origin <default-branch>:<default-branch>` en segundo plano para avanzar la ref local por defecto mediante fast-forward sin alterar el árbol de trabajo del usuario (las actualizaciones que no son fast-forward se rechazan, y la rama por defecto no está checked out en esta ruta). Se imprime un breve aviso solo cuando la ref local por defecto realmente avanzó.
+
+Los archivos sin seguimiento (untracked) no se consideran "cambios" en la verificación de estado dirty; se mantienen de forma segura al cambiar de rama.
 
 ### sync_gitignored_writes
 

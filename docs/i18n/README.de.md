@@ -118,6 +118,7 @@ Das Plugin unterstützt benutzerkonfigurierbare Optionen über den `userConfig`-
 | `skip_directories` | Kommagetrennte Liste von Git-Repository-Wurzelpfaden, in denen auto-worktree nicht aktiviert werden soll | (leer) |
 | `pull_default_branch` | Den neuesten Default-Branch von Origin beim Sitzungsstart pullen. Verwendet ausschließlich Fast-Forward — lokale Änderungen werden niemals überschrieben. Bei Fehler wird stillschweigend fortgefahren. | `true` |
 | `sync_gitignored_writes` | Automatisch gitignorierte Dateien, die in einem Worktree geschrieben wurden, zurück ins Haupt-Repository kopieren. Deckt Write/Edit-Tool-Aufrufe und Bash-Ausgabeumleitungen ab. | `true` |
+| `auto_return_to_default` | Wechselt beim Sitzungsstart automatisch zum Default-Branch zurück, wenn man sich auf einem Nicht-Default-Branch ohne uncommittete Änderungen befindet. | `true` |
 
 ### Beispiel settings.json
 
@@ -142,6 +143,21 @@ Repositorys, deren Wurzelpfad einem Eintrag hier entspricht, werden vom Plugin v
 ### pull_default_branch
 
 Wenn aktiviert (Standardeinstellung), führt das Plugin beim Sitzungsstart `git pull --ff-only` aus (mit einem Timeout von 8 Sekunden), um sicherzustellen, dass der lokale Default-Branch aktuell ist, bevor ein Worktree erstellt wird. Wenn der Pull fehlschlägt (z. B. offline, Timeout, divergierte Historie), fährt das Plugin mit dem lokalen Stand fort und gibt eine Warnung aus. Setzen Sie den Wert auf `false`, um dies vollständig zu überspringen.
+
+### auto_return_to_default
+
+Diese Option steuert ausschließlich, **ob der Arbeits-Branch automatisch auf den Default-Branch zurückgewechselt wird**. Das Aktualisieren der lokalen Default-Ref ist eine separate Aufgabe, die von `pull_default_branch` erledigt wird und auch dann läuft, wenn diese Option deaktiviert ist.
+
+Wenn aktiviert (Standardeinstellung), prüft das Plugin beim Sitzungsstart, ob sich Claude im Haupt-Repository auf einem Nicht-Default-Branch befindet. Falls ja:
+
+- **Keine uncommitteten Änderungen** — Das Plugin führt automatisch `git checkout <default-branch>` aus und setzt den normalen Pull- + EnterWorktree-Ablauf fort. Eine kurze Meldung wird ausgegeben, damit Claude den Benutzer informieren kann.
+- **Uncommittete Änderungen vorhanden** — Das Plugin gibt eine Warnung aus, mit der Bitte, vor dem Wechsel zu committen und zu pushen, und beendet sich, ohne den aktuellen Branch zu ändern.
+
+Auf `false` setzen, um den automatischen Wechsel vollständig zu deaktivieren. Nicht-Default-Branches werden weder gewechselt noch wird eine Warnung ausgegeben.
+
+Unabhängig von dieser Option führt das Plugin bei aktiviertem `pull_default_branch` und einem Nicht-Default-Branch im Hintergrund `git fetch origin <default-branch>:<default-branch>` aus, was die lokale Default-Ref per Fast-Forward voranbringt, ohne den Working Tree zu stören (Non-Fast-Forward-Updates werden abgelehnt, und der Default-Branch ist in diesem Pfad nicht ausgecheckt). Eine kurze Meldung wird nur ausgegeben, wenn die lokale Default-Ref tatsächlich vorangerückt ist.
+
+Untracked-Dateien gelten bei der Dirty-Prüfung nicht als „Änderungen" — sie werden bei einem Branch-Wechsel sicher übernommen.
 
 ### sync_gitignored_writes
 
