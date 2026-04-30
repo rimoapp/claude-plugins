@@ -1,6 +1,6 @@
 {
   "name": "auto-worktree",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Automatically creates git worktrees when Claude modifies files, enabling safe parallel work without git conflicts.",
   "author": {
     "name": "rimoapp"
@@ -23,6 +23,12 @@
       "title": "Sync Gitignored Writes",
       "type": "boolean",
       "description": "Automatically copy gitignored files written in a worktree back to the main repository. Covers Write/Edit tool calls and Bash output redirects to gitignored paths. (default: true)",
+      "sensitive": false
+    },
+    "auto_return_to_default": {
+      "title": "Auto Return to Default Branch",
+      "type": "boolean",
+      "description": "Automatically switch back to the default branch at session start if on a non-default branch with no uncommitted changes. When disabled, the working branch is left alone; the local default branch ref is still kept fresh by pull_default_branch. (default: true)",
       "sensitive": false
     }
   }

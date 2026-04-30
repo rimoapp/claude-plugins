@@ -118,6 +118,7 @@ O plugin suporta opções configuráveis pelo usuário por meio do mecanismo `us
 | `skip_directories` | Lista de caminhos raiz de repositórios git separados por vírgula onde o auto-worktree não deve ser ativado | (vazio) |
 | `pull_default_branch` | Faz pull da branch padrão mais recente do origin ao iniciar a sessão. Usa apenas fast-forward — alterações locais nunca são sobrescritas. Continua silenciosamente em caso de falha. | `true` |
 | `sync_gitignored_writes` | Copia automaticamente arquivos ignorados pelo git escritos em um worktree de volta para o repositório principal. Cobre chamadas das ferramentas Write/Edit e redirecionamentos de saída do Bash. | `true` |
+| `auto_return_to_default` | Volta automaticamente para a branch padrão ao iniciar a sessão se você estiver em uma branch não padrão sem alterações não commitadas. | `true` |
 
 ### Exemplo de settings.json
 
@@ -142,6 +143,21 @@ Repositórios cujo caminho raiz corresponda a uma entrada aqui serão completame
 ### pull_default_branch
 
 Quando habilitado (o padrão), o plugin executa `git pull --ff-only` no início da sessão (com timeout de 8 segundos) para garantir que a branch padrão local esteja atualizada antes de criar um worktree. Se o pull falhar (por exemplo, offline, timeout, histórico divergente), o plugin continua com o estado local e exibe um aviso. Defina como `false` para pular completamente.
+
+### auto_return_to_default
+
+Esta opção controla apenas **se a branch de trabalho é alternada automaticamente de volta para a branch padrão**. Manter a ref local da branch padrão atualizada é responsabilidade de `pull_default_branch` e é executada mesmo quando esta opção está desabilitada.
+
+Quando habilitado (o padrão), o plugin verifica no início da sessão se o Claude está em uma branch não padrão no repositório principal. Se estiver:
+
+- **Sem alterações não commitadas** — o plugin executa automaticamente `git checkout <default-branch>` e continua com o fluxo normal de pull + EnterWorktree. Uma breve mensagem é exibida para que o Claude possa informar o usuário.
+- **Existem alterações não commitadas** — o plugin exibe um aviso pedindo ao usuário para fazer commit e push antes de trocar, e então sai sem modificar a branch de trabalho.
+
+Defina como `false` para desabilitar completamente a troca automática. Branches não padrão não são trocadas e nenhum aviso é impresso.
+
+Independentemente desta opção, quando `pull_default_branch=true` e o Claude está em uma branch não padrão, o plugin executa `git fetch origin <default-branch>:<default-branch>` em segundo plano para avançar a ref local padrão via fast-forward sem perturbar a árvore de trabalho do usuário (atualizações non-fast-forward são rejeitadas, e a branch padrão não está checked out neste caminho). Uma breve mensagem é impressa apenas quando a ref local padrão de fato avançou.
+
+Arquivos não rastreados (untracked) não são considerados "alterações" na verificação de dirty — eles são preservados com segurança ao trocar de branch.
 
 ### sync_gitignored_writes
 
