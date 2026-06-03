@@ -38,14 +38,14 @@ Claude Code에서 다음을 실행하세요:
 
 ```
 /plugin marketplace add rimoapp/claude-plugin-auto-worktree
-/plugin install auto-worktree@rimoapp-plugins
+/plugin install auto-worktree@rimo
 ```
 
 설치 후, 플러그인은 세션 간에 유지됩니다. 언제든지 활성화/비활성화할 수 있습니다:
 
 ```
-/plugin disable auto-worktree@rimoapp-plugins
-/plugin enable auto-worktree@rimoapp-plugins
+/plugin disable auto-worktree@rimo
+/plugin enable auto-worktree@rimo
 ```
 
 ### 로컬 디렉토리에서 설치
@@ -125,7 +125,7 @@ my-project/
 ```json
 {
   "pluginConfigs": {
-    "auto-worktree@rimoapp-plugins": {
+    "auto-worktree@rimo": {
       "options": {
         "skip_directories": "/Users/me/notes,/Users/me/scratch",
         "pull_default_branch": "false",

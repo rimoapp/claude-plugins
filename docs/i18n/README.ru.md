@@ -38,14 +38,14 @@
 
 ```
 /plugin marketplace add rimoapp/claude-plugin-auto-worktree
-/plugin install auto-worktree@rimoapp-plugins
+/plugin install auto-worktree@rimo
 ```
 
 После установки плагин сохраняется между сессиями. Вы можете включать и отключать его в любое время:
 
 ```
-/plugin disable auto-worktree@rimoapp-plugins
-/plugin enable auto-worktree@rimoapp-plugins
+/plugin disable auto-worktree@rimo
+/plugin enable auto-worktree@rimo
 ```
 
 ### Из локальной директории
@@ -125,7 +125,7 @@ my-project/
 ```json
 {
   "pluginConfigs": {
-    "auto-worktree@rimoapp-plugins": {
+    "auto-worktree@rimo": {
       "options": {
         "skip_directories": "/Users/me/notes,/Users/me/scratch",
         "pull_default_branch": "false",

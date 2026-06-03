@@ -38,14 +38,14 @@
 
 ```
 /plugin marketplace add rimoapp/claude-plugin-auto-worktree
-/plugin install auto-worktree@rimoapp-plugins
+/plugin install auto-worktree@rimo
 ```
 
 安装后，插件会在各会话间持久保留。你可以随时启用或禁用它：
 
 ```
-/plugin disable auto-worktree@rimoapp-plugins
-/plugin enable auto-worktree@rimoapp-plugins
+/plugin disable auto-worktree@rimo
+/plugin enable auto-worktree@rimo
 ```
 
 ### 从本地目录安装
@@ -125,7 +125,7 @@ my-project/
 ```json
 {
   "pluginConfigs": {
-    "auto-worktree@rimoapp-plugins": {
+    "auto-worktree@rimo": {
       "options": {
         "skip_directories": "/Users/me/notes,/Users/me/scratch",
         "pull_default_branch": "false",

@@ -38,14 +38,14 @@ No Claude Code, execute:
 
 ```
 /plugin marketplace add rimoapp/claude-plugin-auto-worktree
-/plugin install auto-worktree@rimoapp-plugins
+/plugin install auto-worktree@rimo
 ```
 
 Após a instalação, o plugin persiste entre sessões. Você pode ativá-lo ou desativá-lo a qualquer momento:
 
 ```
-/plugin disable auto-worktree@rimoapp-plugins
-/plugin enable auto-worktree@rimoapp-plugins
+/plugin disable auto-worktree@rimo
+/plugin enable auto-worktree@rimo
 ```
 
 ### A partir de um diretório local
@@ -125,7 +125,7 @@ O plugin suporta opções configuráveis pelo usuário por meio do mecanismo `us
 ```json
 {
   "pluginConfigs": {
-    "auto-worktree@rimoapp-plugins": {
+    "auto-worktree@rimo": {
       "options": {
         "skip_directories": "/Users/me/notes,/Users/me/scratch",
         "pull_default_branch": "false",
