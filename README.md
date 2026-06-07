@@ -1,21 +1,21 @@
-# rimo plugins
+# claude-plugins
 
-The `rimo` plugin marketplace for [Claude Code](https://claude.com/claude-code) — a small catalog of plugins maintained by rimoapp.
+The `rimo-tools` plugin marketplace for [Claude Code](https://claude.com/claude-code) — a catalog of plugins maintained by rimoapp.
 
 ## Install
 
 Add the marketplace once:
 
 ```
-/plugin marketplace add rimoapp/rimo-plugins
+/plugin marketplace add rimoapp/claude-plugins
 ```
 
 Then install what you want:
 
 ```
-/plugin install auto-worktree@rimo   # individual plugin
-/plugin install dispatch@rimo         # individual plugin
-/plugin install rimo-all@rimo         # everything (bundle)
+/plugin install auto-worktree@rimo-tools   # individual plugin
+/plugin install dispatch@rimo-tools         # individual plugin
+/plugin install rimo-all@rimo-tools         # everything (bundle)
 ```
 
 Installing `rimo-all` pulls in every individual plugin automatically via plugin
@@ -32,7 +32,7 @@ dependencies. After installing, run `/reload-plugins` to activate.
 ## Repository layout
 
 ```
-.claude-plugin/marketplace.json   # the rimo catalog
+.claude-plugin/marketplace.json   # the rimo-tools catalog
 plugins/
   auto-worktree/                  # plugin: manifest, hooks, lib, tests, docs
   dispatch/                       # plugin: dispatch skill

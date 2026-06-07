@@ -1,4 +1,4 @@
-# claude-plugin-auto-worktree
+# auto-worktree
 
 [English](../../README.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [中文](README.zh-cn.md) | [Русский](README.ru.md) | [Português](README.pt.md) | [한국어](README.ko.md)
 
@@ -37,15 +37,15 @@ Cada sessão do Claude recebe seu próprio worktree e branch isolados, de forma 
 No Claude Code, execute:
 
 ```
-/plugin marketplace add rimoapp/claude-plugin-auto-worktree
-/plugin install auto-worktree@rimo
+/plugin marketplace add rimoapp/claude-plugins
+/plugin install auto-worktree@rimo-tools
 ```
 
 Após a instalação, o plugin persiste entre sessões. Você pode ativá-lo ou desativá-lo a qualquer momento:
 
 ```
-/plugin disable auto-worktree@rimo
-/plugin enable auto-worktree@rimo
+/plugin disable auto-worktree@rimo-tools
+/plugin enable auto-worktree@rimo-tools
 ```
 
 ### A partir de um diretório local
@@ -53,7 +53,7 @@ Após a instalação, o plugin persiste entre sessões. Você pode ativá-lo ou 
 Para desenvolvimento ou testes:
 
 ```bash
-claude --plugin-dir /path/to/claude-plugin-auto-worktree
+claude --plugin-dir /path/to/claude-plugins/plugins/auto-worktree
 ```
 
 ## Como Funciona
@@ -125,7 +125,7 @@ O plugin suporta opções configuráveis pelo usuário por meio do mecanismo `us
 ```json
 {
   "pluginConfigs": {
-    "auto-worktree@rimo": {
+    "auto-worktree@rimo-tools": {
       "options": {
         "skip_directories": "/Users/me/notes,/Users/me/scratch",
         "pull_default_branch": "false",
@@ -199,7 +199,7 @@ git worktree prune         # Limpar referências obsoletas
 ## Estrutura de Arquivos
 
 ```
-claude-plugin-auto-worktree/
+auto-worktree/
 ├── .claude-plugin/
 │   ├── marketplace.json     # Definição do marketplace
 │   └── plugin.json          # Manifesto do plugin

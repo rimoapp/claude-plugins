@@ -1,4 +1,4 @@
-# claude-plugin-auto-worktree
+# auto-worktree
 
 [English](../../README.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [中文](README.zh-cn.md) | [Русский](README.ru.md) | [Português](README.pt.md) | [한국어](README.ko.md)
 
@@ -37,15 +37,15 @@ Claude Code プラグイン。ファイル変更前に Claude を自動的に gi
 Claude Code で以下を実行します：
 
 ```
-/plugin marketplace add rimoapp/claude-plugin-auto-worktree
-/plugin install auto-worktree@rimo
+/plugin marketplace add rimoapp/claude-plugins
+/plugin install auto-worktree@rimo-tools
 ```
 
 インストール後、プラグインはセッション間で保持されます。いつでも有効/無効を切り替えられます：
 
 ```
-/plugin disable auto-worktree@rimo
-/plugin enable auto-worktree@rimo
+/plugin disable auto-worktree@rimo-tools
+/plugin enable auto-worktree@rimo-tools
 ```
 
 ### ローカルディレクトリから
@@ -53,7 +53,7 @@ Claude Code で以下を実行します：
 開発やテスト用：
 
 ```bash
-claude --plugin-dir /path/to/claude-plugin-auto-worktree
+claude --plugin-dir /path/to/claude-plugins/plugins/auto-worktree
 ```
 
 ## 仕組み
@@ -125,7 +125,7 @@ my-project/
 ```json
 {
   "pluginConfigs": {
-    "auto-worktree@rimo": {
+    "auto-worktree@rimo-tools": {
       "options": {
         "skip_directories": "/Users/me/notes,/Users/me/scratch",
         "pull_default_branch": "false",
@@ -199,7 +199,7 @@ git worktree prune         # 古い参照をクリーンアップ
 ## ファイル構成
 
 ```
-claude-plugin-auto-worktree/
+auto-worktree/
 ├── .claude-plugin/
 │   ├── marketplace.json     # マーケットプレイス定義
 │   └── plugin.json          # プラグインマニフェスト
