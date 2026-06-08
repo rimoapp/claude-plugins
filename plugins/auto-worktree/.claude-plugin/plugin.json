@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "Automatically creates git worktrees when Claude modifies files, enabling safe parallel work without git conflicts.",
   "author": {
-    "name": "rimoapp"
+    "name": "Rimo",
+    "email": "support@rimo.app",
+    "url": "https://rimo.app"
   },
+  "repository": "https://github.com/rimoapp/claude-plugins",
   "license": "MIT",
   "userConfig": {
     "skip_directories": {
