@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "Convenience bundle of the rimoapp dev plugins: auto-worktree (safe parallel git worktrees) and dispatch (launch Claude Code in another repository). Installing it pulls in both. The product integration plugin `rimo` is intentionally not bundled — install it directly with `rimo@rimo-tools` when you need it.",
   "author": {
-    "name": "rimoapp"
+    "name": "Rimo",
+    "email": "support@rimo.app",
+    "url": "https://rimo.app"
   },
+  "repository": "https://github.com/rimoapp/claude-plugins",
   "license": "MIT",
   "dependencies": [
     "auto-worktree",

@@ -1,7 +1,8 @@
 {
   "name": "rimo-tools",
   "owner": {
-    "name": "rimoapp"
+    "name": "Rimo",
+    "email": "support@rimo.app"
   },
   "metadata": {
     "pluginRoot": "./plugins"
@@ -10,7 +11,6 @@
     {
       "name": "auto-worktree",
       "source": "auto-worktree",
-      "version": "1.0.0",
       "description": "Automatically creates git worktrees when Claude modifies files, enabling safe parallel work without git conflicts.",
       "license": "MIT",
       "category": "dev"
@@ -18,7 +18,6 @@
     {
       "name": "dispatch",
       "source": "dispatch",
-      "version": "0.1.0",
       "description": "Launch an interactive Claude Code session in another repository and auto-report its result when it finishes.",
       "license": "MIT",
       "category": "dev",
@@ -30,8 +29,8 @@
         "source": "github",
         "repo": "rimoapp/cli"
       },
-      "version": "1.0.0",
       "description": "Rimo Voice integration — the rimo-cli skill plus the `rimo mcp` server. Requires the rimo CLI on your PATH.",
+      "repository": "https://github.com/rimoapp/cli",
       "license": "MIT",
       "category": "product",
       "tags": ["rimo-voice", "mcp"]
@@ -39,7 +38,6 @@
     {
       "name": "rimo-all",
       "source": "rimo-all",
-      "version": "1.0.0",
       "description": "Installs all Rimo plugins together (auto-worktree + dispatch). A convenience bundle.",
       "license": "MIT",
       "category": "bundle"

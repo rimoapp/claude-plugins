@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "Launch an interactive Claude Code session in another repository. Opens a new Terminal.app or iTerm2 tab, moves to the target repo, runs claude with an initial prompt, and reports the child session's result automatically when it finishes.",
   "author": {
-    "name": "rimoapp"
+    "name": "Rimo",
+    "email": "support@rimo.app",
+    "url": "https://rimo.app"
   },
+  "repository": "https://github.com/rimoapp/claude-plugins",
   "license": "MIT"
 }
