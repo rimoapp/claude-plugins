@@ -37,7 +37,7 @@ Claude Code 플러그인으로, 파일을 수정하기 전에 자동으로 git w
 Claude Code에서 다음을 실행하세요:
 
 ```
-/plugin marketplace add rimoapp/claude-plugins
+/plugin marketplace add rimo/claude-plugins
 /plugin install auto-worktree@rimo-tools
 ```
 

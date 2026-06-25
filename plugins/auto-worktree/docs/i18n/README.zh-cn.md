@@ -37,7 +37,7 @@
 在 Claude Code 中运行：
 
 ```
-/plugin marketplace add rimoapp/claude-plugins
+/plugin marketplace add rimo/claude-plugins
 /plugin install auto-worktree@rimo-tools
 ```
 

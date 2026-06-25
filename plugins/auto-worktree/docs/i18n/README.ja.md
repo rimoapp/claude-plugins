@@ -37,7 +37,7 @@ Claude Code プラグイン。ファイル変更前に Claude を自動的に gi
 Claude Code で以下を実行します：
 
 ```
-/plugin marketplace add rimoapp/claude-plugins
+/plugin marketplace add rimo/claude-plugins
 /plugin install auto-worktree@rimo-tools
 ```
 

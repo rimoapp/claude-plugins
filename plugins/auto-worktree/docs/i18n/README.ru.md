@@ -37,7 +37,7 @@
 В Claude Code выполните:
 
 ```
-/plugin marketplace add rimoapp/claude-plugins
+/plugin marketplace add rimo/claude-plugins
 /plugin install auto-worktree@rimo-tools
 ```
 

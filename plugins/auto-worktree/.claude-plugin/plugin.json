@@ -7,7 +7,7 @@
     "email": "support@rimo.app",
     "url": "https://rimo.app"
   },
-  "repository": "https://github.com/rimoapp/claude-plugins",
+  "repository": "https://github.com/rimo/claude-plugins",
   "license": "MIT",
   "userConfig": {
     "skip_directories": {

@@ -37,7 +37,7 @@ Jede Claude-Sitzung erhält ihren eigenen isolierten Worktree und Branch, sodass
 In Claude Code ausführen:
 
 ```
-/plugin marketplace add rimoapp/claude-plugins
+/plugin marketplace add rimo/claude-plugins
 /plugin install auto-worktree@rimo-tools
 ```
 

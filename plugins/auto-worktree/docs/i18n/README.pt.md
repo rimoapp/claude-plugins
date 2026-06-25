@@ -37,7 +37,7 @@ Cada sessão do Claude recebe seu próprio worktree e branch isolados, de forma 
 No Claude Code, execute:
 
 ```
-/plugin marketplace add rimoapp/claude-plugins
+/plugin marketplace add rimo/claude-plugins
 /plugin install auto-worktree@rimo-tools
 ```
 
